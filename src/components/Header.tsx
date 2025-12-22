@@ -80,6 +80,16 @@ export default function Header() {
     loadOcrStatus();
   }, []);
 
+  // Recharger les stats OCR
+  const refreshOcrStatus = async () => {
+    try {
+      const status = await getOcrStatus();
+      setOcrStatus(status);
+    } catch {
+      // Silencieux si l'API OCR n'est pas disponible
+    }
+  };
+
   // Lancer l'indexation OCR
   const handleOcrIndex = async () => {
     if (ocrLoading) return;
@@ -87,13 +97,18 @@ export default function Header() {
     try {
       await runOcrBatch(25);
       // Recharger les stats après le traitement
-      const status = await getOcrStatus();
-      setOcrStatus(status);
+      await refreshOcrStatus();
     } catch {
       // Silencieux en cas d'erreur
     } finally {
       setOcrLoading(false);
     }
+  };
+
+  // Actualiser tout (données + stats OCR)
+  const handleRefresh = () => {
+    actions.refresh();
+    refreshOcrStatus();
   };
 
   const handleViewModeChange = (mode: ViewMode) => {
@@ -338,7 +353,7 @@ export default function Header() {
           <button
             className="toolbar-btn"
             title="Actualiser"
-            onClick={actions.refresh}
+            onClick={handleRefresh}
           >
             <RefreshCw className="w-5 h-5" />
           </button>
@@ -357,7 +372,7 @@ export default function Header() {
                   ocrStatus.not_processed === 0
                     ? 'bg-green-50 text-green-600'
                     : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
-                } ${ocrLoading ? 'opacity-50 cursor-wait' : ''}`}
+                } ${ocrLoading ? 'cursor-wait' : ''}`}
                 title={ocrStatus.not_processed === 0 ? 'Tous les documents sont indexés' : `${ocrStatus.not_processed} documents à indexer`}
               >
                 {ocrLoading ? (
@@ -374,9 +389,13 @@ export default function Header() {
                       ? 'Indexation...'
                       : 'Indexer'}
                 </span>
-                {ocrStatus.not_processed > 0 && !ocrLoading && (
-                  <span className="bg-blue-200 text-blue-700 px-1 py-0.5 rounded text-[10px] font-bold">
-                    {ocrStatus.not_processed}
+                {ocrStatus.total_documents > 0 && (
+                  <span className={`px-1 py-0.5 rounded text-[10px] font-bold ${
+                    ocrStatus.not_processed === 0
+                      ? 'bg-green-200 text-green-700'
+                      : 'bg-blue-200 text-blue-700'
+                  }`}>
+                    {Math.round((ocrStatus.total_indexed / ocrStatus.total_documents) * 100)}%
                   </span>
                 )}
               </button>
