@@ -173,6 +173,17 @@ function SearchResultItem({ item, onPreview }: { item: ApiItem; onPreview: (doc:
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="truncate text-sm font-medium">{item.name}</span>
+          {/* Indicateurs de type de correspondance */}
+          {item.match_type?.includes('filename') && (
+            <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-medium flex-shrink-0">
+              Titre
+            </span>
+          )}
+          {item.match_type?.includes('content') && (
+            <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-medium flex-shrink-0">
+              Contenu
+            </span>
+          )}
           {/* Indicateur des étiquettes */}
           {tagColors.length > 0 && (
             <div className="flex items-center gap-0.5 flex-shrink-0">
@@ -291,7 +302,20 @@ function MobileSearchResultItem({ item, onPreview }: { item: ApiItem; onPreview:
       )}
       
       <div className="flex-1 min-w-0">
-        <div className="font-medium text-sm truncate">{item.name}</div>
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-sm truncate">{item.name}</span>
+          {/* Indicateurs de type de correspondance */}
+          {item.match_type?.includes('filename') && (
+            <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-medium flex-shrink-0">
+              Titre
+            </span>
+          )}
+          {item.match_type?.includes('content') && (
+            <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-medium flex-shrink-0">
+              Contenu
+            </span>
+          )}
+        </div>
         <div className="text-xs text-ged-text-muted truncate">{item.path}</div>
       </div>
 
@@ -354,7 +378,7 @@ function Column({
   folderColor = 'text-ged-accent',
 }: ColumnProps) {
   return (
-    <div className="flex flex-col min-w-[180px] max-w-[220px] border-r border-ged-border bg-white">
+    <div className="flex flex-col min-w-[180px] max-w-[220px] border-r border-ged-border bg-white flex-shrink-0">
       <div className="column-header">
         <span>{title}</span>
         <span className="text-[10px] font-normal text-ged-text-muted">
@@ -926,95 +950,99 @@ export default function ColumnBrowser() {
   // =============== VERSION DESKTOP ===============
   return (
     <div className="flex flex-1 overflow-hidden bg-ged-surface-alt relative">
-      {/* Colonne ARMOIRE */}
-      <Column
-        title="ARMOIRE"
-        items={filteredArmoires}
-        selectedId={selection.armoire?.id || null}
-        onSelect={actions.selectArmoire}
-        loading={loading.armoires}
-        folderColor="text-ged-accent"
-      />
+      <div className="flex-1 overflow-x-auto overflow-y-hidden">
+        <div className="flex min-w-max h-full">
+          {/* Colonne ARMOIRE */}
+          <Column
+            title="ARMOIRE"
+            items={filteredArmoires}
+            selectedId={selection.armoire?.id || null}
+            onSelect={actions.selectArmoire}
+            loading={loading.armoires}
+            folderColor="text-ged-accent"
+          />
 
-      {/* Colonne RAYON */}
-      <Column
-        title="RAYON"
-        items={filteredRayons}
-        selectedId={selection.rayon?.id || null}
-        onSelect={actions.selectRayon}
-        loading={loading.rayons}
-        emptyMessage={selection.armoire ? "Aucun rayon" : "Sélectionnez une armoire"}
-        folderColor="text-ged-secondary"
-      />
+          {/* Colonne RAYON */}
+          <Column
+            title="RAYON"
+            items={filteredRayons}
+            selectedId={selection.rayon?.id || null}
+            onSelect={actions.selectRayon}
+            loading={loading.rayons}
+            emptyMessage={selection.armoire ? "Aucun rayon" : "Sélectionnez une armoire"}
+            folderColor="text-ged-secondary"
+          />
 
-      {/* Colonne CLASSEUR */}
-      <Column
-        title="CLASSEUR"
-        items={filteredClasseurs}
-        selectedId={selection.classeur?.id || null}
-        onSelect={actions.selectClasseur}
-        loading={loading.classeurs}
-        emptyMessage={selection.rayon ? "Aucun classeur" : "Sélectionnez un rayon"}
-        folderColor="text-ged-primary"
-      />
+          {/* Colonne CLASSEUR */}
+          <Column
+            title="CLASSEUR"
+            items={filteredClasseurs}
+            selectedId={selection.classeur?.id || null}
+            onSelect={actions.selectClasseur}
+            loading={loading.classeurs}
+            emptyMessage={selection.rayon ? "Aucun classeur" : "Sélectionnez un rayon"}
+            folderColor="text-ged-primary"
+          />
 
-      {/* Colonne DOSSIER */}
-      <Column
-        title="DOSSIER"
-        items={filteredDossiers}
-        selectedId={selection.dossier?.id || null}
-        onSelect={actions.selectDossier}
-        loading={loading.dossiers}
-        emptyMessage={selection.classeur ? "Aucun dossier" : "Sélectionnez un classeur"}
-        folderColor="text-purple-500"
-      />
+          {/* Colonne DOSSIER */}
+          <Column
+            title="DOSSIER"
+            items={filteredDossiers}
+            selectedId={selection.dossier?.id || null}
+            onSelect={actions.selectDossier}
+            loading={loading.dossiers}
+            emptyMessage={selection.classeur ? "Aucun dossier" : "Sélectionnez un classeur"}
+            folderColor="text-purple-500"
+          />
 
-      {/* Colonne INTERCALAIRE (visible seulement s'il y en a) */}
-      {hasIntercalaires && (
-        <Column
-          title="INTERCALAIRE"
-          items={filteredIntercalaires}
-          selectedId={selection.intercalaire?.id || null}
-          onSelect={actions.selectIntercalaire}
-          loading={loading.intercalaires}
-          emptyMessage="Sélectionnez un intercalaire"
-          folderColor="text-pink-500"
-        />
-      )}
-
-      {/* Zone d'affichage des documents */}
-      <div className="flex-1 bg-white flex flex-col min-w-[300px]">
-        <div className="column-header">
-          <span>DOCUMENTS</span>
-          <span className="text-[10px] font-normal text-ged-text-muted">
-            {filteredDocuments.length}
-          </span>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto">
-          {loading.documents ? (
-            <div className="flex items-center justify-center p-8">
-              <Loader2 className="w-6 h-6 animate-spin text-ged-secondary" />
-            </div>
-          ) : filteredDocuments.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-ged-text-muted p-8">
-              <FileText className="w-16 h-16 mb-4 opacity-30" />
-              <p className="text-sm text-center">
-                {hasIntercalaires && !selection.intercalaire
-                  ? 'Sélectionnez un intercalaire'
-                  : selection.dossier || selection.intercalaire
-                    ? 'Aucun document'
-                    : 'Sélectionnez un dossier'}
-              </p>
-            </div>
-          ) : (
-            <DocumentsView 
-              documents={filteredDocuments} 
-              viewMode={viewMode} 
-              selectedId={selection.document?.id || null}
-              onSelect={handleDocumentSelect}
+          {/* Colonne INTERCALAIRE (visible seulement s'il y en a) */}
+          {hasIntercalaires && (
+            <Column
+              title="INTERCALAIRE"
+              items={filteredIntercalaires}
+              selectedId={selection.intercalaire?.id || null}
+              onSelect={actions.selectIntercalaire}
+              loading={loading.intercalaires}
+              emptyMessage="Sélectionnez un intercalaire"
+              folderColor="text-pink-500"
             />
           )}
+
+          {/* Zone d'affichage des documents */}
+          <div className="flex-1 bg-white flex flex-col min-w-[300px] flex-shrink-0">
+            <div className="column-header">
+              <span>DOCUMENTS</span>
+              <span className="text-[10px] font-normal text-ged-text-muted">
+                {filteredDocuments.length}
+              </span>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto">
+              {loading.documents ? (
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-ged-secondary" />
+                </div>
+              ) : filteredDocuments.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-ged-text-muted p-8">
+                  <FileText className="w-16 h-16 mb-4 opacity-30" />
+                  <p className="text-sm text-center">
+                    {hasIntercalaires && !selection.intercalaire
+                      ? 'Sélectionnez un intercalaire'
+                      : selection.dossier || selection.intercalaire
+                        ? 'Aucun document'
+                        : 'Sélectionnez un dossier'}
+                  </p>
+                </div>
+              ) : (
+                <DocumentsView 
+                  documents={filteredDocuments} 
+                  viewMode={viewMode} 
+                  selectedId={selection.document?.id || null}
+                  onSelect={handleDocumentSelect}
+                />
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1214,7 +1242,10 @@ function MobileDocumentPreview({ document, onClose }: { document: ApiItem; onClo
       </div>
 
       {/* Zone de prévisualisation */}
-      <div className="flex-1 overflow-auto bg-black">
+      <div 
+        className="flex-1 min-h-0 overflow-auto bg-black"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
         {previewType === 'image' && (
           <div className="w-full h-full flex items-center justify-center p-4">
             <img 
@@ -1226,18 +1257,38 @@ function MobileDocumentPreview({ document, onClose }: { document: ApiItem; onClo
         )}
 
         {previewType === 'pdf' && (
-          <iframe
-            src={previewUrl}
-            className="w-full h-full"
-            title={document.name}
-          />
+          <object
+            data={`${previewUrl}#toolbar=1&navpanes=0&scrollbar=1&view=FitH`}
+            type="application/pdf"
+            className="w-full h-full min-h-[70vh]"
+            aria-label={document.name}
+          >
+            <iframe
+              src={`${previewUrl}#toolbar=1&navpanes=0&scrollbar=1&view=FitH`}
+              className="w-full h-full min-h-[70vh] border-0"
+              title={document.name}
+              allowFullScreen
+            />
+            <div className="p-4 text-center text-white">
+              <p className="mb-2">Le PDF ne peut pas être affiché ici.</p>
+              <a
+                href={previewUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="underline"
+              >
+                Ouvrir dans un nouvel onglet
+              </a>
+            </div>
+          </object>
         )}
 
         {previewType === 'text' && (
           <iframe
             src={previewUrl}
-            className="w-full h-full bg-white"
+            className="w-full h-full min-h-[70vh] bg-white border-0"
             title={document.name}
+            allowFullScreen
           />
         )}
 

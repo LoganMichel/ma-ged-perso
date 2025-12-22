@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  ged-api:
+    build: .
+    container_name: ged-api
+    ports:
+      - "8001:8000"
+    volumes:
+      # Monte le volume GED de ton NAS
+      - /volume1/GED:/data/GED
+    environment:
+      - GED_ROOT=/data/GED
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+# Réseau par défaut
+networks:
+  default:
+    name: ged-network

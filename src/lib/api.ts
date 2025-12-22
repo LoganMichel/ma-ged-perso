@@ -146,6 +146,7 @@ export interface ApiItem {
   children_count?: number;
   tags?: string[];  // Étiquettes du fichier
   has_intercalaires?: boolean;  // Pour les dossiers: indique si contient des intercalaires
+  match_type?: ('filename' | 'content')[];  // Type de correspondance lors d'une recherche
 }
 
 export interface TreeNode {
