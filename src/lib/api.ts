@@ -456,6 +456,40 @@ export async function removeFavorite(itemId: string): Promise<{ message: string;
   });
 }
 
+// ============== OCR ==============
+
+export interface OcrStatus {
+  completed: number;
+  failed: number;
+  total_indexed: number;
+  total_documents: number;
+  not_processed: number;
+}
+
+export interface OcrBatchResult {
+  processed: number;
+  failed: number;
+  processed_files: string[];
+  failed_files: { file: string; error: string }[];
+  remaining: number;
+}
+
+/**
+ * Récupère les statistiques OCR
+ */
+export async function getOcrStatus(): Promise<OcrStatus> {
+  return fetchApi('/api/ocr/status');
+}
+
+/**
+ * Lance le traitement OCR par lot
+ */
+export async function runOcrBatch(limit: number = 25): Promise<OcrBatchResult> {
+  return fetchApi(`/api/ocr/batch?limit=${limit}`, {
+    method: 'POST',
+  });
+}
+
 // ============== EXPORT CONFIG ==============
 
 export const apiConfig = {

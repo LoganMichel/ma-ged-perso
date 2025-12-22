@@ -20,10 +20,12 @@ import {
   Tag,
   Trash2,
   Star,
+  ScanText,
+  CheckCircle2,
 } from 'lucide-react';
 import { useApp } from '@/lib/store-api';
 import { ViewMode } from '@/lib/store-api';
-import { getDownloadUrl } from '@/lib/api';
+import { getDownloadUrl, getOcrStatus, runOcrBatch, OcrStatus } from '@/lib/api';
 
 export default function Header() {
   const { state, dispatch, actions } = useApp();
@@ -31,6 +33,11 @@ export default function Header() {
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const createMenuRef = useRef<HTMLDivElement>(null);
+
+  // État OCR
+  const [ocrStatus, setOcrStatus] = useState<OcrStatus | null>(null);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [showOcrTooltip, setShowOcrTooltip] = useState(false);
 
   // Debounce search
   useEffect(() => {
@@ -59,6 +66,35 @@ export default function Header() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Charger les stats OCR au montage
+  useEffect(() => {
+    const loadOcrStatus = async () => {
+      try {
+        const status = await getOcrStatus();
+        setOcrStatus(status);
+      } catch {
+        // Silencieux si l'API OCR n'est pas disponible
+      }
+    };
+    loadOcrStatus();
+  }, []);
+
+  // Lancer l'indexation OCR
+  const handleOcrIndex = async () => {
+    if (ocrLoading) return;
+    setOcrLoading(true);
+    try {
+      await runOcrBatch(25);
+      // Recharger les stats après le traitement
+      const status = await getOcrStatus();
+      setOcrStatus(status);
+    } catch {
+      // Silencieux en cas d'erreur
+    } finally {
+      setOcrLoading(false);
+    }
+  };
 
   const handleViewModeChange = (mode: ViewMode) => {
     dispatch({ type: 'SET_VIEW_MODE', payload: mode });
@@ -299,14 +335,81 @@ export default function Header() {
 
           <div className="w-px h-6 bg-ged-border mx-2" />
 
-          <button 
+          <button
             className="toolbar-btn"
             title="Actualiser"
             onClick={actions.refresh}
           >
             <RefreshCw className="w-5 h-5" />
           </button>
-          
+
+          {/* Bouton OCR - desktop uniquement */}
+          {ocrStatus && (
+            <div
+              className="hidden lg:flex items-center gap-2 ml-2 relative"
+              onMouseEnter={() => setShowOcrTooltip(true)}
+              onMouseLeave={() => setShowOcrTooltip(false)}
+            >
+              <button
+                onClick={handleOcrIndex}
+                disabled={ocrLoading || ocrStatus.not_processed === 0}
+                className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors ${
+                  ocrStatus.not_processed === 0
+                    ? 'bg-green-50 text-green-600'
+                    : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                } ${ocrLoading ? 'opacity-50 cursor-wait' : ''}`}
+                title={ocrStatus.not_processed === 0 ? 'Tous les documents sont indexés' : `${ocrStatus.not_processed} documents à indexer`}
+              >
+                {ocrLoading ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : ocrStatus.not_processed === 0 ? (
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                ) : (
+                  <ScanText className="w-3.5 h-3.5" />
+                )}
+                <span className="font-medium">
+                  {ocrStatus.not_processed === 0
+                    ? 'Indexé'
+                    : ocrLoading
+                      ? 'Indexation...'
+                      : 'Indexer'}
+                </span>
+                {ocrStatus.not_processed > 0 && !ocrLoading && (
+                  <span className="bg-blue-200 text-blue-700 px-1 py-0.5 rounded text-[10px] font-bold">
+                    {ocrStatus.not_processed}
+                  </span>
+                )}
+              </button>
+
+              {/* Tooltip avec détails */}
+              {showOcrTooltip && (
+                <div className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-lg border border-ged-border p-3 min-w-[200px] z-50 text-xs">
+                  <div className="font-medium text-ged-text mb-2">Indexation OCR</div>
+                  <div className="space-y-1 text-ged-text-muted">
+                    <div className="flex justify-between">
+                      <span>Documents indexés</span>
+                      <span className="font-medium text-green-600">{ocrStatus.total_indexed}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>En attente</span>
+                      <span className="font-medium text-blue-600">{ocrStatus.not_processed}</span>
+                    </div>
+                    {ocrStatus.failed > 0 && (
+                      <div className="flex justify-between">
+                        <span>Échoués</span>
+                        <span className="font-medium text-red-500">{ocrStatus.failed}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between pt-1 border-t border-ged-border mt-1">
+                      <span>Total documents</span>
+                      <span className="font-medium">{ocrStatus.total_documents}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Espace flexible sur desktop */}
           <div className="hidden md:block flex-1" />
         </div>
