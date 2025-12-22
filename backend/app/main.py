@@ -13,6 +13,7 @@ from typing import Optional, List
 import base64
 import json
 import mimetypes
+from urllib.parse import quote
 import shutil
 import os
 
@@ -573,11 +574,14 @@ async def preview_file(item_id: str):
         raise HTTPException(status_code=400, detail="L'élément n'est pas un fichier")
     
     mime_type = mimetypes.guess_type(str(path))[0] or "application/octet-stream"
+
+    # Content-Disposition RFC 5987 pour supporter l'UTF-8 dans le nom de fichier
+    disposition_filename = quote(path.name)
     
     return FileResponse(
         path,
         media_type=mime_type,
-        headers={"Content-Disposition": f"inline; filename={path.name}"}
+        headers={"Content-Disposition": f"inline; filename*=UTF-8''{disposition_filename}"}
     )
 
 # ============== ENDPOINTS RECHERCHE ==============
